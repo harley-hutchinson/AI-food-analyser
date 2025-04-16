@@ -7,6 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import "./global.css";
 import { useEffect, useState } from "react";
 import AnimatedSplashScreen from "@/components/Core/AnimatedSplashScreen";
+import { StatusBar } from "expo-status-bar";
 
 // Only needed once at the app level
 // SplashScreen.preventAutoHideAsync();
@@ -29,6 +30,7 @@ export default function RootLayout() {
 
   return (
     <>
+      <StatusBar style="dark" />
       {loading ? (
         <AnimatedSplashScreen />
       ) : (
