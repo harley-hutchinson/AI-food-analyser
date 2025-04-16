@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { View, Text, Image, ScrollView, Pressable } from "react-native";
 import { useAtomValue } from "jotai";
 import { analysisAtom } from "@/atoms/analysis";
 import Animated, {
@@ -42,235 +35,136 @@ const CollapsibleSection = ({
   }));
 
   return (
-    <View style={styles.section}>
-      <Pressable onPress={toggleCollapse} style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+    <View className="bg-white mt-4 rounded-xl mx-4 shadow-md overflow-hidden">
+      <Pressable
+        onPress={toggleCollapse}
+        className="flex-row items-center justify-between p-4"
+      >
+        <Text className="text-xl font-semibold text-black">{title}</Text>
         <Animated.View style={iconStyle}>
           <Ionicons name="chevron-up" size={24} color="#666" />
         </Animated.View>
       </Pressable>
-      {!isCollapsed && children}
+      {!isCollapsed && <View className="px-4 pb-4">{children}</View>}
     </View>
   );
 };
 
 const NutritionItem = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.nutritionItem}>
-    <Text style={styles.nutritionLabel}>{label}</Text>
-    <Text style={styles.nutritionValue}>{value}</Text>
+  <View className="w-1/2 p-2">
+    <Text className="text-sm text-gray-500 mb-1">{label}</Text>
+    <Text className="text-base font-medium text-black">{value}</Text>
   </View>
 );
 
 const Page = () => {
   const analysis = useAtomValue(analysisAtom);
-
   if (!analysis) return null;
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      className="flex-1 bg-gray-100"
+      contentContainerStyle={{ paddingBottom: 40 }}
     >
-      <View style={styles.imageContainer}>
+      <View className="h-[300px] w-full">
         <Image
           source={{ uri: analysis.image }}
-          style={styles.image}
+          className="w-full h-full"
           resizeMode="cover"
         />
       </View>
 
-      <View style={styles.titleContainer}>
-        <Text style={styles.foodName}>{analysis.identifiedFood}</Text>
+      <View className="px-4 pt-5 bg-white">
+        <Text className="text-xl font-bold text-black leading-8">
+          {analysis.identifiedFood}
+        </Text>
       </View>
 
       <CollapsibleSection title="Portion Information">
-        <View style={styles.sectionContent}>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Portion Size:</Text>
-            <Text style={styles.value}>{analysis.portionSize}g</Text>
+        <View className="gap-2">
+          <View className="flex-row justify-between">
+            <Text className="text-base text-gray-500">Portion Size:</Text>
+            <Text className="text-base font-medium text-black">
+              {analysis.portionSize}g
+            </Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Serving Size:</Text>
-            <Text style={styles.value}>{analysis.recognizedServingSize}g</Text>
+          <View className="flex-row justify-between">
+            <Text className="text-base text-gray-500">Serving Size:</Text>
+            <Text className="text-base font-medium text-black">
+              {analysis.recognizedServingSize}g
+            </Text>
           </View>
         </View>
       </CollapsibleSection>
 
       <CollapsibleSection title="Nutrition Facts (per portion)">
-        <View style={styles.sectionContent}>
-          <View style={styles.nutritionGrid}>
-            <NutritionItem
-              label="Calories"
-              value={analysis.nutritionFactsPerPortion.calories}
-            />
-            <NutritionItem
-              label="Protein"
-              value={`${analysis.nutritionFactsPerPortion.protein}g`}
-            />
-            <NutritionItem
-              label="Carbs"
-              value={`${analysis.nutritionFactsPerPortion.carbs}g`}
-            />
-            <NutritionItem
-              label="Fat"
-              value={`${analysis.nutritionFactsPerPortion.fat}g`}
-            />
-            <NutritionItem
-              label="Fiber"
-              value={`${analysis.nutritionFactsPerPortion.fiber}g`}
-            />
-            <NutritionItem
-              label="Sugar"
-              value={`${analysis.nutritionFactsPerPortion.sugar}g`}
-            />
-            <NutritionItem
-              label="Sodium"
-              value={`${analysis.nutritionFactsPerPortion.sodium}mg`}
-            />
-            <NutritionItem
-              label="Cholesterol"
-              value={`${analysis.nutritionFactsPerPortion.cholesterol}mg`}
-            />
-          </View>
+        <View className="flex-row flex-wrap -mx-2">
+          <NutritionItem
+            label="Calories"
+            value={analysis.nutritionFactsPerPortion.calories}
+          />
+          <NutritionItem
+            label="Protein"
+            value={`${analysis.nutritionFactsPerPortion.protein}g`}
+          />
+          <NutritionItem
+            label="Carbs"
+            value={`${analysis.nutritionFactsPerPortion.carbs}g`}
+          />
+          <NutritionItem
+            label="Fat"
+            value={`${analysis.nutritionFactsPerPortion.fat}g`}
+          />
+          <NutritionItem
+            label="Fiber"
+            value={`${analysis.nutritionFactsPerPortion.fiber}g`}
+          />
+          <NutritionItem
+            label="Sugar"
+            value={`${analysis.nutritionFactsPerPortion.sugar}g`}
+          />
+          <NutritionItem
+            label="Sodium"
+            value={`${analysis.nutritionFactsPerPortion.sodium}mg`}
+          />
+          <NutritionItem
+            label="Cholesterol"
+            value={`${analysis.nutritionFactsPerPortion.cholesterol}mg`}
+          />
         </View>
       </CollapsibleSection>
 
       <CollapsibleSection title="Additional Notes">
-        <View style={styles.sectionContent}>
+        <View className="gap-2">
           {analysis.additionalNotes.map((note, index) => (
-            <Text key={index} style={styles.note}>
+            <Text key={index} className="text-base text-gray-700 leading-6">
               • {note}
             </Text>
           ))}
         </View>
       </CollapsibleSection>
 
-      <View style={{ marginTop: 24, paddingHorizontal: 16, gap: 12 }}>
+      <View className="mt-6 px-4 gap-3">
         <Pressable
           onPress={() => exportAnalysisAsJSON(analysis)}
-          style={styles.exportButton}
+          className="bg-blue-500 py-3 rounded-lg items-center shadow-md"
         >
-          <Text style={styles.exportButtonText}>📤 Export as JSON</Text>
+          <Text className="text-white text-base font-semibold">
+            📤 Export as JSON
+          </Text>
         </Pressable>
 
         <Pressable
           onPress={() => exportAnalysisAsPDF(analysis)}
-          style={[styles.exportButton, { backgroundColor: "#FF9500" }]}
+          className="bg-orange-500 py-3 rounded-lg items-center shadow-md"
         >
-          <Text style={styles.exportButtonText}>🧾 Export as PDF</Text>
+          <Text className="text-white text-base font-semibold">
+            🧾 Export as PDF
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  contentContainer: {
-    paddingBottom: 40,
-  },
-  imageContainer: {
-    height: 300,
-    width: "100%",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
-  titleContainer: {
-    padding: 16,
-    paddingTop: 20,
-    backgroundColor: "#fff",
-  },
-  foodName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    lineHeight: 32,
-  },
-  section: {
-    backgroundColor: "#fff",
-    marginTop: 16,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: "hidden",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  sectionContent: {
-    padding: 16,
-    paddingTop: 8,
-    backgroundColor: "#fff",
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1a1a1a",
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 16,
-    color: "#666",
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1a1a1a",
-  },
-  nutritionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -8,
-  },
-  nutritionItem: {
-    width: "50%",
-    padding: 8,
-  },
-  nutritionLabel: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 4,
-  },
-  nutritionValue: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1a1a1a",
-  },
-  note: {
-    fontSize: 16,
-    color: "#4a4a4a",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  exportButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    elevation: 3,
-  },
-  exportButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
 
 export default Page;

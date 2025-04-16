@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "calai",
-    "slug": "calai",
+    "name": "AI Food Analyser",
+    "slug": "ai-food-analyser",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -26,7 +26,7 @@
       [
         "expo-router",
         {
-          "origin": "https://galaxies.dev"
+          "origin": "https://example.com"
         }
       ],
       [
