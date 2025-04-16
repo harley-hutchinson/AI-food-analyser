@@ -1,4 +1,10 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
@@ -18,6 +24,21 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    // Reset everything
+    setIsLoading(false);
+    setHasAnalyzed(false);
+    setStep(0);
+
+    // Optional: add a tiny delay for feel
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 800);
+  };
 
   const captureImage = async (camera = false) => {
     // if (__DEV__) {
@@ -94,7 +115,7 @@ export default function Index() {
     }, delays[current]);
 
     return () => clearInterval(interval);
-  }, [hasAnalyzed]);
+  }, [hasAnalyzed, refreshing]);
 
   // Reset chat when screen is focused
   useFocusEffect(
@@ -113,7 +134,12 @@ export default function Index() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Text className="text-3xl font-bold mb-4 text-black">
           👋 Hey, I'm Evie
         </Text>
