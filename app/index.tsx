@@ -1,15 +1,9 @@
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { analysisAtom } from "@/atoms/analysis";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -22,13 +16,16 @@ export default function Index() {
   const router = useRouter();
   const setAnalysis = useSetAtom(analysisAtom);
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState(0);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   const captureImage = async (camera = false) => {
-    if (__DEV__) {
-      setAnalysis(fakeResponse);
-      router.push("/result");
-      return;
-    }
+    // if (__DEV__) {
+    //   setAnalysis(fakeResponse);
+    //   setHasAnalyzed(true);
+    //   router.push("/result");
+    //   return;
+    // }
 
     setIsLoading(true);
 
@@ -55,58 +52,99 @@ export default function Index() {
         return;
       }
 
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          image: {
-            inlineData: {
-              data: result.assets[0].base64,
-              mimeType: "image/jpeg",
-            },
+      setTimeout(async () => {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-      });
+          body: JSON.stringify({
+            image: {
+              inlineData: {
+                data: result.assets[0].base64,
+                mimeType: "image/jpeg",
+              },
+            },
+          }),
+        });
 
-      const data = await response.json();
-      const foodAnalysis = data.data.foodAnalysis;
-      foodAnalysis.image = result.assets[0].uri;
-      setAnalysis(foodAnalysis);
-      router.push("/result");
+        const data = await response.json();
+        const foodAnalysis = data.data.foodAnalysis;
+        foodAnalysis.image = result.assets[0].uri;
+        setAnalysis(foodAnalysis);
+        setHasAnalyzed(true);
+        router.push("/result");
+      }, 2000);
     } catch (error) {
       console.error("Error processing image:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  // Animate chat intro
+  useEffect(() => {
+    if (hasAnalyzed) return; // skip intro after returning
+
+    const delays = [1000, 2000, 2000];
+    let current = 0;
+
+    const interval = setInterval(() => {
+      current++;
+      setStep(current);
+      if (current >= delays.length) clearInterval(interval);
+    }, delays[current]);
+
+    return () => clearInterval(interval);
+  }, [hasAnalyzed]);
+
+  // Reset chat when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(false);
+
+      if (hasAnalyzed) {
+        // show post-analysis chat message
+        setStep(99);
+      } else {
+        setStep(0);
+      }
+    }, [hasAnalyzed])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-
-      <ScrollView
-        contentContainerStyle={{ padding: 20 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Title */}
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text className="text-3xl font-bold mb-4 text-black">
           👋 Hey, I'm Evie
         </Text>
 
-        {/* Evie’s messages */}
-        <EvieMessage>
-          I'm your AI nutrition assistant. Just send me a photo of your food and
-          I’ll break it down for you.
-        </EvieMessage>
+        {/* Initial chat */}
+        {step === 0 && <EvieTyping />}
 
-        <EvieMessage>
-          Want to take a picture right now, or choose one from your gallery?
-          📷🖼️
-        </EvieMessage>
+        {step >= 1 && step < 99 && (
+          <EvieMessage>
+            I'm your AI nutrition assistant. Just send me a photo of your food
+            and I’ll break it down for you.
+          </EvieMessage>
+        )}
 
-        {/* Typing animation while processing */}
+        {step >= 2 && step < 99 && (
+          <EvieMessage>
+            Want to take a picture right now, or choose one from your gallery?
+            📷🖼️
+          </EvieMessage>
+        )}
+
+        {/* Post analysis chat */}
+        {step === 99 && (
+          <>
+            <EvieMessage>
+              Want to scan another meal? I’m ready when you are 🍽️
+            </EvieMessage>
+          </>
+        )}
+
+        {/* Loading state */}
         {isLoading && (
           <>
             <EvieMessage>Analyzing your image… hang tight!</EvieMessage>
@@ -114,8 +152,8 @@ export default function Index() {
           </>
         )}
 
-        {/* Action Buttons */}
-        {!isLoading && (
+        {/* Action buttons */}
+        {!isLoading && (step >= 3 || step === 99) && (
           <View className="mt-6 flex-col gap-4">
             <TouchableOpacity
               onPress={() => captureImage(true)}
