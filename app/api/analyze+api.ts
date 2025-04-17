@@ -1,12 +1,15 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAi = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: Request): Promise<Response> {
   try {
-    const { image } = await req.json();
+    const { image, apiKey } = await req.json();
 
-    const model = genAi.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    if (!apiKey) {
+      return Response.json({ error: "Missing API key." }, { status: 400 });
+    }
+
+    const genAi = new GoogleGenerativeAI(apiKey);
+    const model = genAi.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `Analyze this food image and provide detailed nutritional information in the following JSON format:
     {
@@ -41,7 +44,7 @@ export async function POST(req: Request): Promise<Response> {
         ]
       }
     }
-    
+      
     Ensure the response is in valid JSON format exactly as specified above, without any markdown formatting.
     Provide realistic estimates based on typical portion sizes and nutritional databases.
     Be as specific and accurate as possible in identifying the food and its components.
@@ -52,15 +55,15 @@ export async function POST(req: Request): Promise<Response> {
     const text = response.text();
 
     // Clean up the response text to remove any markdown formatting
-    const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+    const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
 
-    // Parse the response text as JSON to validate the format
+    // Parse the cleaned response text
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(cleanedText);
     } catch (error) {
-      console.error('Failed to parse Gemini response as JSON:', error);
-      throw new Error('Invalid response format from Gemini');
+      console.error("Failed to parse Gemini response as JSON:", error);
+      throw new Error("Invalid response format from Gemini");
     }
 
     return Response.json({
@@ -68,7 +71,10 @@ export async function POST(req: Request): Promise<Response> {
       data: parsedResponse,
     });
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: 'Failed to generate content' }, { status: 500 });
+    console.error("Analyze API error:", error);
+    return Response.json(
+      { error: "Failed to generate content" },
+      { status: 500 }
+    );
   }
 }

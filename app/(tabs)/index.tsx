@@ -1,31 +1,28 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-} from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { analysisAtom } from "@/atoms/analysis";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import EvieMessage from "@/components/Core/EvieMessage";
-import EvieTyping from "@/components/Core/EvieTyping";
+import { getApiKey } from "@/lib/secureStore";
+import Header from "@/components/Home/Header";
+import ChatMessages from "@/components/Home/ChatMessages";
+import ActionButtons from "@/components/Home/ActionButtons";
 
 const fakeResponse = require("@/assets/response.json");
 
 export default function Index() {
   const router = useRouter();
   const setAnalysis = useSetAtom(analysisAtom);
+
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const isFirstVisit = useRef(true); // 🧠 Track if it's the user's first time
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const isFirstVisit = useRef(true);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -71,12 +68,17 @@ export default function Index() {
         return;
       }
 
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        setIsLoading(false);
+        alert("Please add your Gemini API key first.");
+        return;
+      }
+
       setTimeout(async () => {
         const response = await fetch("/api/analyze", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             image: {
               inlineData: {
@@ -84,22 +86,26 @@ export default function Index() {
                 mimeType: "image/jpeg",
               },
             },
+            apiKey,
           }),
         });
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+
         const foodAnalysis = data.data.foodAnalysis;
         foodAnalysis.image = result.assets[0].uri;
         setAnalysis(foodAnalysis);
         setHasAnalyzed(true);
         router.push("/result");
-      }, 2000);
+      }, 1000);
     } catch (error) {
-      console.error("Error processing image:", error);
+      console.error(error);
+      alert("Failed to analyze image");
+      setIsLoading(false);
     }
   };
 
-  // ✨ Animate Evie's chat intro
   const startIntro = () => {
     const delays = [1000, 2000, 2000];
     let current = 0;
@@ -110,33 +116,31 @@ export default function Index() {
 
       if (current >= delays.length) {
         clearInterval(interval);
-        setStep(3); // step 3 = show buttons
+        setStep(3);
       }
     }, delays[current]);
 
     return () => clearInterval(interval);
   };
 
-  // Start intro on first load
-  useEffect(() => {
-    if (!hasAnalyzed) {
-      startIntro();
-    }
-  }, []);
-
-  // Reset screen when focus changes (tab switching)
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(false);
+      const checkApiKey = async () => {
+        const apiKey = await getApiKey();
+        setHasApiKey(!!apiKey);
+      };
 
+      checkApiKey();
+
+      setIsLoading(false);
       if (hasAnalyzed) {
-        setStep(99); // after analysis, show ready message
+        setStep(99);
       } else {
         setStep(0);
         if (isFirstVisit.current) {
-          startIntro(); // full intro first time
+          startIntro();
         } else {
-          setStep(3); // quick skip intro after first
+          setStep(3);
         }
         isFirstVisit.current = false;
       }
@@ -152,68 +156,10 @@ export default function Index() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Heading */}
-        <Text className="text-3xl font-bold mb-4 text-black">
-          👋 Hey, I'm Evie
-        </Text>
-
-        {/* Initial chat */}
-        {step === 0 && <EvieTyping />}
-
-        {step >= 1 && step < 99 && (
-          <EvieMessage>
-            I'm your AI nutrition assistant. Just send me a photo of your food
-            and I’ll break it down for you.
-          </EvieMessage>
-        )}
-
-        {step >= 2 && step < 99 && (
-          <EvieMessage>
-            Want to take a picture right now, or choose one from your gallery?
-            📷🖼️
-          </EvieMessage>
-        )}
-
-        {/* Post analysis chat */}
-        {step === 99 && (
-          <>
-            <EvieMessage>
-              Want to scan another meal? I’m ready when you are 🍽️
-            </EvieMessage>
-          </>
-        )}
-
-        {/* Loading state */}
-        {isLoading && (
-          <>
-            <EvieMessage>Analyzing your image… hang tight!</EvieMessage>
-            <EvieTyping />
-          </>
-        )}
-
-        {/* Action buttons */}
-        {!isLoading && (step >= 3 || step === 99) && (
-          <View className="mt-6 flex-col gap-4">
-            <TouchableOpacity
-              onPress={() => captureImage(true)}
-              className="flex-row items-center gap-2 bg-blue-600 px-4 py-3 rounded-full shadow-md"
-            >
-              <Ionicons name="camera-outline" size={20} color="#fff" />
-              <Text className="text-white font-medium text-base">
-                Take Photo
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => captureImage(false)}
-              className="flex-row items-center gap-2 bg-green-600 px-4 py-3 rounded-full shadow-md"
-            >
-              <Ionicons name="image-outline" size={20} color="#fff" />
-              <Text className="text-white font-medium text-base">
-                Pick from Gallery
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <Header hasApiKey={hasApiKey} />
+        <ChatMessages step={step} hasApiKey={hasApiKey} isLoading={isLoading} />
+        {!isLoading && (step >= 3 || step === 99) && hasApiKey && (
+          <ActionButtons captureImage={captureImage} />
         )}
       </ScrollView>
     </SafeAreaView>
