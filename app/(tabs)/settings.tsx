@@ -13,6 +13,7 @@ import { validateApiKey } from "@/lib/helpers/validateApiKey";
 import { useSetAtom, useAtomValue } from "jotai";
 import { apiKeyStatusAtom } from "@/atoms/apiKey";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Toast from "react-native-toast-message";
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
@@ -33,30 +34,43 @@ export default function Settings() {
 
   const handleSave = async () => {
     if (!apiKey.trim()) {
-      Alert.alert("Error", "Please enter a valid API Key.");
+      Toast.show({
+        type: "error",
+        text1: "Missing API Key",
+        text2: "Please enter a valid API Key.",
+      });
       return;
     }
 
     const isValid = await validateApiKey(apiKey.trim());
 
     if (!isValid) {
-      Alert.alert(
-        "Invalid API Key",
-        "The API key you entered is invalid. Please check and try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Invalid API Key",
+        text2: "Please check your key and try again.",
+      });
       setApiKeyStatus("invalid");
       return;
     }
 
     await saveApiKey(apiKey.trim());
-    Alert.alert("Success", "API Key saved successfully.");
+    Toast.show({
+      type: "success",
+      text1: "API Key Saved!",
+      text2: "You're ready to go 🎉",
+    });
     setApiKeyStatus("connected");
     loadStoredKey();
   };
 
   const handleDelete = async () => {
     await deleteApiKey();
-    Alert.alert("Deleted", "API Key removed.");
+    Toast.show({
+      type: "info",
+      text1: "API Key Removed",
+      text2: "You’ll need to add one to use Evie.",
+    });
     setApiKey("");
     setStoredKey(null);
     setApiKeyStatus("missing");
@@ -64,17 +78,29 @@ export default function Settings() {
 
   const handleTestApiKey = async () => {
     if (!apiKey.trim()) {
-      Alert.alert("Error", "Please enter an API key first.");
+      Toast.show({
+        type: "error",
+        text1: "Missing API Key",
+        text2: "Please enter an API Key first.",
+      });
       return;
     }
 
     const isValid = await validateApiKey(apiKey.trim());
 
     if (isValid) {
-      Alert.alert("Success", "API key is valid!");
+      Toast.show({
+        type: "success",
+        text1: "API Key is valid!",
+        text2: "Connection confirmed ✅",
+      });
       setApiKeyStatus("connected");
     } else {
-      Alert.alert("Invalid", "The API key you entered is invalid.");
+      Toast.show({
+        type: "error",
+        text1: "Invalid API Key",
+        text2: "Please check and try again.",
+      });
       setApiKeyStatus("invalid");
     }
   };

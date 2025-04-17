@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as SplashScreen from "expo-splash-screen";
+import Toast from "react-native-toast-message";
 
 import "./global.css";
 import { useEffect, useState } from "react";
@@ -50,6 +51,7 @@ export default function RootLayout() {
           />
         </Stack>
       )}
+      <Toast position="bottom" />
     </>
   );
 }

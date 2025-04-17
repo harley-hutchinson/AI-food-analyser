@@ -15,6 +15,7 @@ import { useApiKeyStatus } from "@/lib/hooks/useApiKeyStatus";
 import EvieMessage from "@/components/Core/EvieMessage";
 import EvieTyping from "@/components/Core/EvieTyping";
 import { connectionMessages } from "@/lib/static/messages";
+import Toast from "react-native-toast-message";
 
 const fakeResponse = require("@/assets/response.json");
 
@@ -79,10 +80,11 @@ export default function Index() {
       if (!apiKey) {
         setApiKeyStatus("missing");
         setIsLoading(false);
-        Alert.alert(
-          "Missing API Key",
-          "Please add your Gemini API key in Settings before scanning."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Missing API Key",
+          text2: "Please add your Gemini API key in Settings before scanning.",
+        });
         return;
       }
 
@@ -108,15 +110,17 @@ export default function Index() {
         if (!response.ok) {
           if (data.error?.includes("Invalid API key")) {
             setApiKeyStatus("invalid");
-            Alert.alert(
-              "Invalid API Key",
-              "Your API key is invalid. Please update it in Settings."
-            );
+            Toast.show({
+              type: "error",
+              text1: "Invalid API Key",
+              text2: "Please update your API key in Settings.",
+            });
           } else {
-            Alert.alert(
-              "Error",
-              data.error || "Failed to analyze image. Please try again."
-            );
+            Toast.show({
+              type: "error",
+              text1: "Error",
+              text2: data.error || "Failed to analyze image. Please try again.",
+            });
           }
           setIsLoading(false);
           return;
@@ -132,7 +136,11 @@ export default function Index() {
       }, 1000);
     } catch (error: any) {
       console.error("Error processing image:", error);
-      Alert.alert("Error", "Something went wrong while analyzing your image.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Something went wrong while analyzing your image.",
+      });
       setIsLoading(false);
     }
   };
