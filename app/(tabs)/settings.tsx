@@ -12,6 +12,7 @@ import { saveApiKey, getApiKey, deleteApiKey } from "@/lib/secureStore";
 import { validateApiKey } from "@/lib/helpers/validateApiKey";
 import { useSetAtom, useAtomValue } from "jotai";
 import { apiKeyStatusAtom } from "@/atoms/apiKey";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
@@ -113,36 +114,46 @@ export default function Settings() {
           )}
         </View>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          onPress={handleSave}
-          className="bg-blue-600 py-4 rounded-lg items-center mb-4"
-        >
-          <Text className="text-white font-semibold text-lg">Save API Key</Text>
-        </TouchableOpacity>
+        {/* Buttons section */}
+        <View className="bg-gray-100 p-4 rounded-xl space-y-4">
+          {/* Save Button */}
+          <TouchableOpacity
+            onPress={handleSave}
+            className="flex-row items-center justify-center bg-blue-600 py-4 rounded-lg gap-2 mb-3"
+          >
+            <Ionicons name="save-outline" size={20} color="#fff" />
+            <Text className="text-white font-semibold text-lg">
+              Save API Key
+            </Text>
+          </TouchableOpacity>
 
-        {/* Extra buttons if key exists */}
-        {storedKey && (
-          <>
-            <TouchableOpacity
-              onPress={handleTestApiKey}
-              className="bg-yellow-500 py-4 rounded-lg items-center mb-4"
-            >
-              <Text className="text-white font-semibold text-lg">
-                Test API Key
-              </Text>
-            </TouchableOpacity>
+          {/* Test and Delete if key exists */}
+          {storedKey && (
+            <View className="flex-row justify-between gap-4">
+              <TouchableOpacity
+                onPress={handleTestApiKey}
+                className="flex-1 flex-row items-center justify-center bg-yellow-500 py-3 rounded-lg gap-2"
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={20}
+                  color="#fff"
+                />
+                <Text className="text-white font-semibold text-base">Test</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleDelete}
-              className="bg-red-500 py-4 rounded-lg items-center"
-            >
-              <Text className="text-white font-semibold text-lg">
-                Remove API Key
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
+              <TouchableOpacity
+                onPress={handleDelete}
+                className="flex-1 flex-row items-center justify-center bg-red-500 py-3 rounded-lg gap-2"
+              >
+                <Ionicons name="trash-outline" size={20} color="#fff" />
+                <Text className="text-white font-semibold text-base">
+                  Remove
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
