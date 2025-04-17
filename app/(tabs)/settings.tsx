@@ -9,10 +9,16 @@ import {
   ScrollView,
 } from "react-native";
 import { saveApiKey, getApiKey, deleteApiKey } from "@/lib/secureStore";
+import { validateApiKey } from "@/lib/helpers/validateApiKey";
+import { useSetAtom, useAtomValue } from "jotai";
+import { apiKeyStatusAtom } from "@/atoms/apiKey";
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
   const [storedKey, setStoredKey] = useState<string | null>(null);
+
+  const apiKeyStatus = useAtomValue(apiKeyStatusAtom);
+  const setApiKeyStatus = useSetAtom(apiKeyStatusAtom);
 
   useEffect(() => {
     loadStoredKey();
@@ -30,8 +36,20 @@ export default function Settings() {
       return;
     }
 
+    const isValid = await validateApiKey(apiKey.trim());
+
+    if (!isValid) {
+      Alert.alert(
+        "Invalid API Key",
+        "The API key you entered is invalid. Please check and try again."
+      );
+      setApiKeyStatus("invalid");
+      return;
+    }
+
     await saveApiKey(apiKey.trim());
     Alert.alert("Success", "API Key saved successfully.");
+    setApiKeyStatus("connected");
     loadStoredKey();
   };
 
@@ -40,6 +58,24 @@ export default function Settings() {
     Alert.alert("Deleted", "API Key removed.");
     setApiKey("");
     setStoredKey(null);
+    setApiKeyStatus("missing");
+  };
+
+  const handleTestApiKey = async () => {
+    if (!apiKey.trim()) {
+      Alert.alert("Error", "Please enter an API key first.");
+      return;
+    }
+
+    const isValid = await validateApiKey(apiKey.trim());
+
+    if (isValid) {
+      Alert.alert("Success", "API key is valid!");
+      setApiKeyStatus("connected");
+    } else {
+      Alert.alert("Invalid", "The API key you entered is invalid.");
+      setApiKeyStatus("invalid");
+    }
   };
 
   return (
@@ -61,6 +97,23 @@ export default function Settings() {
           />
         </View>
 
+        {/* Status display */}
+        <View className="mb-6">
+          <Text className="text-lg text-black font-medium mb-2">
+            Connection Status:
+          </Text>
+          {apiKeyStatus === "connected" && (
+            <Text className="text-green-600 font-semibold">✅ Connected</Text>
+          )}
+          {apiKeyStatus === "invalid" && (
+            <Text className="text-red-500 font-semibold">❌ Invalid Key</Text>
+          )}
+          {apiKeyStatus === "missing" && (
+            <Text className="text-gray-400 font-semibold">➖ No Key</Text>
+          )}
+        </View>
+
+        {/* Save Button */}
         <TouchableOpacity
           onPress={handleSave}
           className="bg-blue-600 py-4 rounded-lg items-center mb-4"
@@ -68,13 +121,27 @@ export default function Settings() {
           <Text className="text-white font-semibold text-lg">Save API Key</Text>
         </TouchableOpacity>
 
+        {/* Extra buttons if key exists */}
         {storedKey && (
-          <TouchableOpacity
-            onPress={handleDelete}
-            className="bg-red-500 py-4 rounded-lg items-center"
-          >
-            <Text className="text-white font-semibold text-lg">Remove API Key</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              onPress={handleTestApiKey}
+              className="bg-yellow-500 py-4 rounded-lg items-center mb-4"
+            >
+              <Text className="text-white font-semibold text-lg">
+                Test API Key
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDelete}
+              className="bg-red-500 py-4 rounded-lg items-center"
+            >
+              <Text className="text-white font-semibold text-lg">
+                Remove API Key
+              </Text>
+            </TouchableOpacity>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>

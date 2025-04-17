@@ -1,6 +1,6 @@
 import EvieMessage from "@/components/Core/EvieMessage";
 import EvieTyping from "@/components/Core/EvieTyping";
-import { getGreeting } from "@/lib/Greeting";
+import { getGreeting } from "@/lib/greeting";
 
 interface ChatMessagesProps {
   step: number;

@@ -1,8 +1,11 @@
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StatusBar } from "expo-status-bar";
+import { useApiKeyStatus } from "@/lib/hooks/useApiKeyStatus";
 
 export default function TabLayout() {
+  useApiKeyStatus();
+
   return (
     <>
       <StatusBar style="dark" />

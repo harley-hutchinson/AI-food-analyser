@@ -1,4 +1,4 @@
-import { View, ScrollView, RefreshControl } from "react-native";
+import { View, ScrollView, RefreshControl, Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,12 +10,14 @@ import { getApiKey } from "@/lib/secureStore";
 import Header from "@/components/Home/Header";
 import ChatMessages from "@/components/Home/ChatMessages";
 import ActionButtons from "@/components/Home/ActionButtons";
+import { apiKeyStatusAtom } from "@/atoms/apiKey";
 
 const fakeResponse = require("@/assets/response.json");
 
 export default function Index() {
   const router = useRouter();
   const setAnalysis = useSetAtom(analysisAtom);
+  const setApiKeyStatus = useSetAtom(apiKeyStatusAtom);
 
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(0);
@@ -36,12 +38,12 @@ export default function Index() {
   };
 
   const captureImage = async (camera = false) => {
-    if (__DEV__) {
-      setAnalysis(fakeResponse);
-      setHasAnalyzed(true);
-      router.push("/result");
-      return;
-    }
+    // if (__DEV__) {
+    //   setAnalysis(fakeResponse);
+    //   setHasAnalyzed(true);
+    //   router.push("/result");
+    //   return;
+    // }
 
     setIsLoading(true);
 
@@ -51,13 +53,13 @@ export default function Index() {
       if (camera) {
         await ImagePicker.requestCameraPermissionsAsync();
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           quality: 1,
           base64: true,
         });
       } else {
         result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           quality: 1,
           base64: true,
         });
@@ -70,15 +72,21 @@ export default function Index() {
 
       const apiKey = await getApiKey();
       if (!apiKey) {
+        setApiKeyStatus("missing");
         setIsLoading(false);
-        alert("Please add your Gemini API key first.");
+        Alert.alert(
+          "Missing API Key",
+          "Please add your Gemini API key in Settings before scanning."
+        );
         return;
       }
 
       setTimeout(async () => {
         const response = await fetch("/api/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             image: {
               inlineData: {
@@ -91,21 +99,38 @@ export default function Index() {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
+
+        if (!response.ok) {
+          if (data.error?.includes("Invalid API key")) {
+            setApiKeyStatus("invalid");
+            Alert.alert(
+              "Invalid API Key",
+              "Your API key is invalid. Please update it in Settings."
+            );
+          } else {
+            Alert.alert(
+              "Error",
+              data.error || "Failed to analyze image. Please try again."
+            );
+          }
+          setIsLoading(false);
+          return;
+        }
 
         const foodAnalysis = data.data.foodAnalysis;
         foodAnalysis.image = result.assets[0].uri;
+
         setAnalysis(foodAnalysis);
         setHasAnalyzed(true);
+        setApiKeyStatus("connected");
         router.push("/result");
       }, 1000);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to analyze image");
+    } catch (error: any) {
+      console.error("Error processing image:", error);
+      Alert.alert("Error", "Something went wrong while analyzing your image.");
       setIsLoading(false);
     }
   };
-
   const startIntro = () => {
     const delays = [1000, 2000, 2000];
     let current = 0;
@@ -156,7 +181,7 @@ export default function Index() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <Header hasApiKey={hasApiKey} />
+        <Header />
         <ChatMessages step={step} hasApiKey={hasApiKey} isLoading={isLoading} />
         {!isLoading && (step >= 3 || step === 99) && hasApiKey && (
           <ActionButtons captureImage={captureImage} />
