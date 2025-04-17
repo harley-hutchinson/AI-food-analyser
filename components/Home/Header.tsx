@@ -6,8 +6,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 export default function Header() {
   const apiKeyStatus = useAtomValue(apiKeyStatusAtom);
 
-  console.log("Header component rendered with apiKeyStatus:", apiKeyStatus);
-
   return (
     <View className="flex-row items-center gap-2 mb-4">
       <Text className="text-3xl font-bold text-black">👋 Hey, I'm Evie</Text>
