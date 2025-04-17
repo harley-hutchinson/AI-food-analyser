@@ -9,7 +9,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { analysisAtom } from "@/atoms/analysis";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -25,28 +25,26 @@ export default function Index() {
   const [step, setStep] = useState(0);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const isFirstVisit = useRef(true); // 🧠 Track if it's the user's first time
 
   const onRefresh = async () => {
     setRefreshing(true);
-
-    // Reset everything
     setIsLoading(false);
     setHasAnalyzed(false);
     setStep(0);
-
-    // Optional: add a tiny delay for feel
+    startIntro();
     setTimeout(() => {
       setRefreshing(false);
     }, 800);
   };
 
   const captureImage = async (camera = false) => {
-    // if (__DEV__) {
-    //   setAnalysis(fakeResponse);
-    //   setHasAnalyzed(true);
-    //   router.push("/result");
-    //   return;
-    // }
+    if (__DEV__) {
+      setAnalysis(fakeResponse);
+      setHasAnalyzed(true);
+      router.push("/result");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -101,32 +99,46 @@ export default function Index() {
     }
   };
 
-  // Animate chat intro
-  useEffect(() => {
-    if (hasAnalyzed) return; // skip intro after returning
-
+  // ✨ Animate Evie's chat intro
+  const startIntro = () => {
     const delays = [1000, 2000, 2000];
     let current = 0;
 
     const interval = setInterval(() => {
       current++;
       setStep(current);
-      if (current >= delays.length) clearInterval(interval);
+
+      if (current >= delays.length) {
+        clearInterval(interval);
+        setStep(3); // step 3 = show buttons
+      }
     }, delays[current]);
 
     return () => clearInterval(interval);
-  }, [hasAnalyzed, refreshing]);
+  };
 
-  // Reset chat when screen is focused
+  // Start intro on first load
+  useEffect(() => {
+    if (!hasAnalyzed) {
+      startIntro();
+    }
+  }, []);
+
+  // Reset screen when focus changes (tab switching)
   useFocusEffect(
     useCallback(() => {
       setIsLoading(false);
 
       if (hasAnalyzed) {
-        // show post-analysis chat message
-        setStep(99);
+        setStep(99); // after analysis, show ready message
       } else {
         setStep(0);
+        if (isFirstVisit.current) {
+          startIntro(); // full intro first time
+        } else {
+          setStep(3); // quick skip intro after first
+        }
+        isFirstVisit.current = false;
       }
     }, [hasAnalyzed])
   );
@@ -140,6 +152,7 @@ export default function Index() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Heading */}
         <Text className="text-3xl font-bold mb-4 text-black">
           👋 Hey, I'm Evie
         </Text>

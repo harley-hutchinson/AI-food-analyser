@@ -35,7 +35,7 @@ export default function RootLayout() {
         <AnimatedSplashScreen />
       ) : (
         <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="result"
             options={{
