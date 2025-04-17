@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AI Food Analyser",
-    "slug": "ai-food-analyser",
+    "slug": "merto-ai-food-analyser",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -47,6 +47,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": "https://example.com"
+      },
+      "eas": {
+        "projectId": "68374cce-3dbd-4800-9f3b-09f7e3d34fbd"
+      }
+    },
+    "owner": "dave223"
   }
 }
