@@ -14,6 +14,7 @@ import { useSetAtom, useAtomValue } from "jotai";
 import { apiKeyStatusAtom } from "@/atoms/apiKey";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
+import { StatusBar } from "expo-status-bar";
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
@@ -123,6 +124,7 @@ export default function Settings() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text className="text-2xl font-bold mb-6 text-black">⚙️ Settings</Text>
 
