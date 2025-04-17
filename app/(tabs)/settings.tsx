@@ -5,7 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { saveApiKey, getApiKey, deleteApiKey } from "@/lib/secureStore";
@@ -18,6 +18,10 @@ import Toast from "react-native-toast-message";
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
   const [storedKey, setStoredKey] = useState<string | null>(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const apiKeyStatus = useAtomValue(apiKeyStatusAtom);
   const setApiKeyStatus = useSetAtom(apiKeyStatusAtom);
@@ -42,15 +46,18 @@ export default function Settings() {
       return;
     }
 
+    setIsSaving(true);
+
     const isValid = await validateApiKey(apiKey.trim());
 
     if (!isValid) {
       Toast.show({
         type: "error",
         text1: "Invalid API Key",
-        text2: "Please check your key and try again.",
+        text2: "Please check and try again.",
       });
       setApiKeyStatus("invalid");
+      setIsSaving(false);
       return;
     }
 
@@ -61,10 +68,13 @@ export default function Settings() {
       text2: "You're ready to go 🎉",
     });
     setApiKeyStatus("connected");
+    setIsSaving(false);
     loadStoredKey();
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
+
     await deleteApiKey();
     Toast.show({
       type: "info",
@@ -74,6 +84,8 @@ export default function Settings() {
     setApiKey("");
     setStoredKey(null);
     setApiKeyStatus("missing");
+
+    setIsDeleting(false);
   };
 
   const handleTestApiKey = async () => {
@@ -85,6 +97,8 @@ export default function Settings() {
       });
       return;
     }
+
+    setIsTesting(true);
 
     const isValid = await validateApiKey(apiKey.trim());
 
@@ -103,6 +117,8 @@ export default function Settings() {
       });
       setApiKeyStatus("invalid");
     }
+
+    setIsTesting(false);
   };
 
   return (
@@ -141,16 +157,23 @@ export default function Settings() {
         </View>
 
         {/* Buttons section */}
-        <View className="bg-gray-100 p-4 rounded-xl space-y-4">
+        <View className="bg-gray-100 p-4 rounded-xl gap-4">
           {/* Save Button */}
           <TouchableOpacity
             onPress={handleSave}
-            className="flex-row items-center justify-center bg-blue-600 py-4 rounded-lg gap-2 mb-3"
+            className="flex-row items-center justify-center bg-blue-600 py-4 rounded-lg gap-2"
+            disabled={isSaving}
           >
-            <Ionicons name="save-outline" size={20} color="#fff" />
-            <Text className="text-white font-semibold text-lg">
-              Save API Key
-            </Text>
+            {isSaving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text className="text-white font-semibold text-lg">
+                  Save API Key
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Test and Delete if key exists */}
@@ -159,23 +182,39 @@ export default function Settings() {
               <TouchableOpacity
                 onPress={handleTestApiKey}
                 className="flex-1 flex-row items-center justify-center bg-yellow-500 py-3 rounded-lg gap-2"
+                disabled={isTesting}
               >
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={20}
-                  color="#fff"
-                />
-                <Text className="text-white font-semibold text-base">Test</Text>
+                {isTesting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={20}
+                      color="#fff"
+                    />
+                    <Text className="text-white font-semibold text-base">
+                      Test
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleDelete}
                 className="flex-1 flex-row items-center justify-center bg-red-500 py-3 rounded-lg gap-2"
+                disabled={isDeleting}
               >
-                <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text className="text-white font-semibold text-base">
-                  Remove
-                </Text>
+                {isDeleting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={20} color="#fff" />
+                    <Text className="text-white font-semibold text-base">
+                      Remove
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           )}
