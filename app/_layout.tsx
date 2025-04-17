@@ -9,6 +9,7 @@ import "./global.css";
 import { useEffect, useState } from "react";
 import AnimatedSplashScreen from "@/components/Core/AnimatedSplashScreen";
 import { StatusBar } from "expo-status-bar";
+import { EvieToast } from "@/components/Core/EvieToast";
 
 // Only needed once at the app level
 // SplashScreen.preventAutoHideAsync();
@@ -51,7 +52,13 @@ export default function RootLayout() {
           />
         </Stack>
       )}
-      <Toast position="bottom" />
+      <Toast
+        config={{
+          success: (props) => <EvieToast {...props} />,
+          error: (props) => <EvieToast {...props} />,
+          info: (props) => <EvieToast {...props} />,
+        }}
+      />
     </>
   );
 }
