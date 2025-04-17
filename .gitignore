@@ -8,6 +8,11 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+eas.json
+
+# Builds
+android/
+ios/
 
 # Native
 *.orig.*
@@ -40,3 +45,4 @@ app-example
 
 client-app/app/nativewind.d.ts
 client-app/nativewind-env.d.ts
+.gitignore
