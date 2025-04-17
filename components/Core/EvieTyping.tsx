@@ -1,23 +1,34 @@
-import { MotiView } from "moti";
-import { View } from "react-native";
+import { View, Text } from "react-native";
+import Animated, {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { useEffect } from "react";
 
 export default function EvieTyping() {
+  const dotCount = useSharedValue(0);
+
+  useEffect(() => {
+    dotCount.value = withRepeat(withTiming(3, { duration: 1200 }), -1, true);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const dots = ".".repeat(Math.round(dotCount.value));
+    return {
+      opacity: 1,
+    };
+  });
+
   return (
-    <View className="flex-row gap-1 items-center">
-      {[0, 1, 2].map((i) => (
-        <MotiView
-          key={i}
-          from={{ opacity: 0.3, scale: 1 }}
-          animate={{ opacity: 1, scale: 1.2 }}
-          transition={{
-            loop: true,
-            delay: i * 150,
-            type: "timing",
-            duration: 500,
-          }}
-          className="w-2 h-2 bg-gray-400 rounded-full"
-        />
-      ))}
+    <View className="p-4 mb-2 max-w-[80%]">
+      <Animated.Text
+        className="text-black font-medium text-base"
+        style={animatedStyle}
+      >
+        Evie is thinking{Array(Math.round(dotCount.value)).fill(".").join("")}
+      </Animated.Text>
     </View>
   );
 }

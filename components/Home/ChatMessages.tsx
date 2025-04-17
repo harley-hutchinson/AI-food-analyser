@@ -1,5 +1,6 @@
 import EvieMessage from "@/components/Core/EvieMessage";
 import EvieTyping from "@/components/Core/EvieTyping";
+import { getGreeting } from "@/lib/Greeting";
 
 interface ChatMessagesProps {
   step: number;
@@ -22,6 +23,7 @@ export default function ChatMessages({
         <>
           {hasApiKey ? (
             <EvieMessage>
+              {getGreeting()} {"\n"}
               I'm your AI nutrition assistant. Just send me a photo of your food
               and I’ll break it down for you.
             </EvieMessage>
