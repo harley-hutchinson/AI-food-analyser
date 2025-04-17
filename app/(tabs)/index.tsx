@@ -1,4 +1,4 @@
-import { View, ScrollView, RefreshControl, Alert } from "react-native";
+import { View, ScrollView, RefreshControl, Alert, Text } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +11,10 @@ import Header from "@/components/Home/Header";
 import ChatMessages from "@/components/Home/ChatMessages";
 import ActionButtons from "@/components/Home/ActionButtons";
 import { apiKeyStatusAtom } from "@/atoms/apiKey";
+import { useApiKeyStatus } from "@/lib/hooks/useApiKeyStatus";
+import EvieMessage from "@/components/Core/EvieMessage";
+import EvieTyping from "@/components/Core/EvieTyping";
+import { connectionMessages } from "@/lib/static/messages";
 
 const fakeResponse = require("@/assets/response.json");
 
@@ -25,6 +29,7 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
   const isFirstVisit = useRef(true);
+  const isCheckingApiKey = useApiKeyStatus();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -171,6 +176,25 @@ export default function Index() {
       }
     }, [hasAnalyzed])
   );
+
+  if (isCheckingApiKey) {
+    const randomMessage =
+      connectionMessages[Math.floor(Math.random() * connectionMessages.length)];
+
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <ScrollView contentContainerStyle={{ padding: 20 }}>
+          <Text className="text-3xl font-bold mb-4 text-black">
+            👋 Hey, I'm Evie
+          </Text>
+
+          <EvieMessage>{randomMessage}</EvieMessage>
+
+          <EvieTyping />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">

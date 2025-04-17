@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
 import { apiKeyStatusAtom } from "@/atoms/apiKey";
 import { getApiKey } from "@/lib/secureStore";
@@ -6,6 +6,7 @@ import { validateApiKey } from "@/lib/helpers/validateApiKey";
 
 export function useApiKeyStatus() {
   const setApiKeyStatus = useSetAtom(apiKeyStatusAtom);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkApiKey = async () => {
@@ -13,6 +14,7 @@ export function useApiKeyStatus() {
 
       if (!apiKey) {
         setApiKeyStatus("missing");
+        setIsChecking(false);
         return;
       }
 
@@ -23,8 +25,12 @@ export function useApiKeyStatus() {
       } else {
         setApiKeyStatus("invalid");
       }
+
+      setIsChecking(false);
     };
 
     checkApiKey();
   }, [setApiKeyStatus]);
+
+  return isChecking;
 }
