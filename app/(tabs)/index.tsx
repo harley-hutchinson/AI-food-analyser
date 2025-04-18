@@ -89,7 +89,7 @@ export default function Index() {
       }
 
       setTimeout(async () => {
-        const response = await fetch("/api/analyze", {
+        const response = await fetch("https://mertosolutions.com/api/analyze", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
